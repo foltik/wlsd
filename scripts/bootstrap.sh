@@ -32,7 +32,7 @@ After=network.target
 Type=simple
 User=wlsd
 WorkingDirectory=/home/wlsd
-ExecStart=/home/wlsd/wlsd
+ExecStart=/home/wlsd/wlsd /home/wlsd/config/prod.toml
 Restart=always
 
 [Install]

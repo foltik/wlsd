@@ -1,7 +1,10 @@
-[server]
-addr = "0.0.0.0:80"
-url = "http://localhost:80"
+[app]
+url = "https://wlsd.foltz.io"
 
-[tls]
+[http]
+addr = "0.0.0.0:80"
+
+[https]
+addr = "0.0.0.0:443"
 cert = "config/selfsigned.cert"
 key = "config/selfsigned.key"

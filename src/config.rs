@@ -6,20 +6,26 @@ pub async fn load(file: &str) -> Result<Config> {
     Ok(toml::from_str(&contents)?)
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Deserialize)]
 pub struct Config {
-    pub server: ServerConfig,
-    pub tls: Option<TlsConfig>,
+    pub app: ServerConfig,
+    pub http: HttpConfig,
+    pub https: Option<HttpsConfig>,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Deserialize)]
 pub struct ServerConfig {
-    pub addr: SocketAddr,
     pub url: String,
 }
 
-#[derive(Debug, serde::Deserialize)]
-pub struct TlsConfig {
+#[derive(Clone, Debug, serde::Deserialize)]
+pub struct HttpConfig {
+    pub addr: SocketAddr,
+}
+
+#[derive(Clone, Debug, serde::Deserialize)]
+pub struct HttpsConfig {
+    pub addr: SocketAddr,
     pub cert: PathBuf,
     pub key: PathBuf,
 }

@@ -1,12 +1,13 @@
 #![allow(unused)]
 
-use std::sync::Arc;
+use std::{net::SocketAddr, sync::Arc};
 
 use anyhow::{Context, Result};
 use axum::{
-    extract::State,
-    http::Response,
-    response::{Html, IntoResponse},
+    extract::{Host, State},
+    handler::HandlerWithoutStateExt,
+    http::{header, Response, StatusCode, Uri},
+    response::{Html, IntoResponse, Redirect},
     routing::get,
     Json, Router,
 };
@@ -16,15 +17,20 @@ use tokio::net::TcpListener;
 
 mod config;
 use config::*;
+use tower_http::services::ServeDir;
 
 #[derive(Clone)]
 struct AppState {
+    config: Config,
     tera: Tera,
 }
 
-fn app() -> Result<Router> {
-    let state = AppState { tera: Tera::new("assets/*")? };
-    let router = Router::new().route("/", get(root)).with_state(Arc::new(state));
+fn app(config: Config) -> Result<Router> {
+    let state = AppState { config, tera: Tera::new("templates/*")? };
+    let router = Router::new()
+        .route("/", get(root))
+        .nest_service("/assets", ServeDir::new("assets"))
+        .with_state(Arc::new(state));
     Ok(router)
 }
 
@@ -40,21 +46,26 @@ async fn root(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 async fn main() -> Result<()> {
     let file = std::env::args().nth(1).context("usage: wlsd <config.yaml>")?;
     let config = config::load(&file).await.with_context(|| format!("loading config={file}"))?;
-    println!("Running with {config:#?}");
 
-    let app = app()?.into_make_service();
-    let ServerConfig { addr, url } = config.server;
+    let app = app(config.clone())?.into_make_service();
+    println!("Live at {}", &config.app.url);
 
-    println!("Listening at {url}");
-    match config.tls {
-        Some(tls) => {
-            let rustls = RustlsConfig::from_pem_file(tls.cert, tls.key).await?;
-            axum_server::bind_rustls(addr, rustls).serve(app).await?;
+    match config.https {
+        Some(https) => {
+            // Redirect HTTP to HTTPS
+            tokio::spawn(async move {
+                let redirect = move || async move { Redirect::permanent(&config.app.url) };
+                axum_server::bind(config.http.addr).serve(redirect.into_make_service()).await
+            });
+
+            // Bind HTTPS
+            let rustls = RustlsConfig::from_pem_file(https.cert, https.key).await?;
+            axum_server::bind_rustls(https.addr, rustls).serve(app).await?;
         }
         None => {
-            axum_server::bind(addr).serve(app).await?;
+            // Bind HTTP
+            axum_server::bind(config.http.addr).serve(app).await?;
         }
     }
-
     Ok(())
 }

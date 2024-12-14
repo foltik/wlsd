@@ -7,7 +7,7 @@ fi
 
 cargo build --profile prod
 
-rsync -Pavzr assets config target/prod/wlsd root@$1:/home/wlsd/
+rsync -Pavzr --delete assets templates config target/prod/wlsd root@$1:/home/wlsd/
 ssh root@$1 <<'EOS'
 apt-get update
 apt-get upgrade -y
