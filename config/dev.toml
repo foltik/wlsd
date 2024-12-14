@@ -1,10 +1,14 @@
 [app]
 url = "https://localhost:4433"
+db = "db.sqlite"
 
 [http]
 addr = "0.0.0.0:8080"
-
 [https]
 addr = "0.0.0.0:4433"
 cert = "config/selfsigned.cert"
 key = "config/selfsigned.key"
+
+[mail]
+addr = "smtp://localhost:1025"
+from = "WLSD <wlsd@foltz.io>"

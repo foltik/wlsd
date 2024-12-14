@@ -17,15 +17,16 @@ git clone https://github.com/foltik/wlsd
 cd wlsd
 ```
 
-Build and run:
-```sh
-cargo run config/dev.toml
-```
-
 To automatically recompile and rerun when you make changes, use `cargo-watch`:
 ```sh
 cargo install cargo-watch
 cargo watch -x 'run config/dev.toml'
+```
+
+Use [mailtutan](https://github.com/mailtutan/mailtutan) for local testing of email functionality:
+```sh
+cargo install mailtutan
+mailtutan
 ```
 
 ## Workflow

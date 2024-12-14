@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link href="/assets/favicon.ico" rel="icon" type="image/x-icon" />
+        <title>WLSD</title>
+    </head>
+    <body>
+        <style>
+            body {
+                background-color: #000;
+                color: #fff;
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+        <main>
+            <h1>{{ message }}</h1>
+            {% if user %}
+            <h2>Welcome, {{ user.first_name }} {{ user.last_name }}</h2>
+            {% else %}
+            <form action="/login" method="post">
+                <label for="email">Email</label>
+                <input type="email" name="email" />
+                <button type="submit">Login</button>
+            </form>
+            {% endif %}
+        </main>
+        <script>
+            (async () => {
+                console.log("{{ message }}");
+            })();
+        </script>
+    </body>
+</html>
