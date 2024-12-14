@@ -1,0 +1,7 @@
+[server]
+addr = "0.0.0.0:80"
+url = "http://localhost:80"
+
+[tls]
+cert = "config/selfsigned.cert"
+key = "config/selfsigned.key"

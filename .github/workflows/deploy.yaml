@@ -1,0 +1,23 @@
+name: Deploy
+on: workflow_dispatch
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+      - name: ssh-keyscan
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan wlsd.foltz.io > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+      - name: deploy
+        run: scripts/deploy.sh wlsd.foltz.io
