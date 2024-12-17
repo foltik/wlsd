@@ -20,6 +20,7 @@ pub struct User {
     pub created_at: String,
 }
 
+#[derive(sqlx::FromRow, serde::Serialize)]
 pub struct Event {
     pub id: i64,
     pub title: String,
@@ -166,20 +167,32 @@ impl Db {
             .await?;
         Ok(row.map(|r| r.0))
     }
+    // Lookup Event by id
+    pub async fn lookup_event_by_event_id(&self, id: &i64) -> Result<Option<Event>> {
+        let event = sqlx::query_as::<_, Event>(
+            "SELECT e.* \
+            FROM events e \
+            WHERE id = ?",
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await?;
+        Ok(event)
+    }
     // Create Event
     pub async fn create_event(
         &self,
         title: &str,
         artist: &str,
         description: &str,
-        start_date: &Datetime,
+        start_date: &str,
     ) -> Result<i64> {
         let row =
             sqlx::query("INSERT INTO events (title, artist, description, start_date) VALUES (?, ?, ?, ?)")
                 .bind(title)
                 .bind(artist)
                 .bind(description)
-                .bind(start_date.to_string())
+                .bind(start_date)
                 .execute(&self.pool)
                 .await?;
         Ok(row.last_insert_rowid())
@@ -191,7 +204,7 @@ impl Db {
         title: &str,
         artist: &str,
         description: &str,
-        start_date: &Datetime,
+        start_date: &str,
     ) -> Result<SqliteQueryResult, Error> {
         sqlx::query(
             "UPDATE events

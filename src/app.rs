@@ -3,7 +3,7 @@ use std::{sync::Arc, time::Duration};
 use crate::*;
 use anyhow::Result;
 use axum::{
-    extract::{MatchedPath, Query, Request, State},
+    extract::{MatchedPath, Path, Query, Request, State},
     http::{header, StatusCode},
     response::{Html, IntoResponse, Response},
     routing::{get, post},
@@ -37,6 +37,10 @@ pub async fn build(config: Config) -> Result<Router> {
         .route("/login", get(login))
         .route("/register", get(register))
         .route("/register", post(register_form))
+        .route("/event/create", get(event_create))
+        .route("/event/create", post(create_event_form))
+        .route("/event/:event_id", get(event_update))
+        .route("/event/:event_id/update", post(update_event_form))
         .nest_service("/assets", ServeDir::new("assets"))
         .layer(
             TraceLayer::new_for_http()
@@ -149,6 +153,67 @@ async fn register_form(
         Redirect::to(&state.config.app.url),
     );
     Ok(headers.into_response())
+}
+
+async fn event_create(State(state): State<Arc<AppState>>) -> AppResult<Response> {
+    let mut ctx = tera::Context::new();
+    let html = state.templates.render("event-create.tera.html", &ctx).unwrap();
+    Ok(Html(html).into_response())
+}
+
+#[derive(serde::Deserialize)]
+struct EventCreateForm {
+    title: String,
+    artist: String,
+    description: String,
+    start_date: String,
+}
+async fn create_event_form(
+    State(state): State<Arc<AppState>>,
+    Form(form): Form<EventCreateForm>,
+) -> AppResult<impl IntoResponse> {
+    let _event_id =
+        state.db.create_event(&form.title, &form.artist, &form.description, &form.start_date).await?;
+    Ok("Event created.")
+}
+
+async fn event_update(
+    State(state): State<Arc<AppState>>,
+    Path(event_id): Path<String>,
+) -> AppResult<Response> {
+    let mut ctx = tera::Context::new();
+    let Some(event) = state.db.lookup_event_by_event_id(&event_id.parse().unwrap()).await? else {
+        return Ok(StatusCode::NOT_FOUND.into_response());
+    };
+    ctx.insert("event", &event);
+
+    let html = state.templates.render("event-update.tera.html", &ctx).unwrap();
+    Ok(Html(html).into_response())
+}
+
+#[derive(serde::Deserialize)]
+struct EventUpdateForm {
+    title: String,
+    artist: String,
+    description: String,
+    start_date: String,
+}
+async fn update_event_form(
+    State(state): State<Arc<AppState>>,
+    Path(event_id): Path<String>,
+    Form(form): Form<EventUpdateForm>,
+) -> AppResult<impl IntoResponse> {
+    state
+        .db
+        .update_event(
+            event_id.parse().unwrap(),
+            &form.title,
+            &form.artist,
+            &form.description,
+            &form.start_date,
+        )
+        .await?;
+    Ok("Event updated.")
 }
 
 struct AppError(anyhow::Error);
