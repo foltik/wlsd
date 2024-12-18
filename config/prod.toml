@@ -1,5 +1,5 @@
 [app]
-url = "https://wlsd.foltz.io"
+url = "https://wlsd.lightandsound.design"
 db = "db.sqlite"
 
 [http]

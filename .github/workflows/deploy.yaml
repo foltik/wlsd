@@ -12,14 +12,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-gnu
       - uses: Swatinem/rust-cache@v2
+      - name: install gcc-aarch64-linux-gnu
+        run: sudo apt install -y gcc-aarch64-linux-gnu
       - uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - name: ssh-keyscan
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan wlsd.foltz.io > ~/.ssh/known_hosts
+          ssh-keyscan wlsd.lightandsound.design > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
       - name: deploy
-        run: scripts/deploy.sh wlsd.foltz.io
+        run: scripts/deploy.sh ec2-user@wlsd.lightandsound.design
