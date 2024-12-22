@@ -1,11 +1,13 @@
 use std::{sync::Arc, time::Duration};
 
-use crate::*;
+use crate::utils::{config::*, db::Db, email::Email};
+use tera::Tera;
+
 use anyhow::Result;
 use axum::{
     extract::{MatchedPath, Query, Request, State},
     http::{header, StatusCode},
-    response::{Html, IntoResponse, Response},
+    response::{Html, IntoResponse, Redirect, Response},
     routing::{get, post},
     Form, Router,
 };
@@ -20,15 +22,15 @@ struct AppState {
     config: Config,
     templates: Tera,
     db: Db,
-    mail: Mail,
+    mail: Email,
 }
 
 pub async fn build(config: Config) -> Result<Router> {
-    let state = app::AppState {
+    let state = AppState {
         config: config.clone(),
         templates: Tera::new("templates/*")?,
         db: Db::connect(&config.app.db).await?,
-        mail: Mail::connect(config.mail).await?,
+        mail: Email::connect(config.email).await?,
     };
 
     let router = Router::new()

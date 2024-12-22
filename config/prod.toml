@@ -2,13 +2,16 @@
 url = "https://wlsd.lightandsound.design"
 db = "db.sqlite"
 
-[http]
-addr = "0.0.0.0:80"
-[https]
-addr = "0.0.0.0:443"
-cert = "config/selfsigned.cert"
-key = "config/selfsigned.key"
+[net]
+http_addr = "[::]:80"
+https_addr = "[::]:443"
 
-[mail]
+[acme]
+domain = "wlsd.lightandsound.design"
+email = "studio249@foltz.io"
+dir = "acme"
+prod = true
+
+[email]
 addr = "smtp://localhost:1080"
 from = "WLSD <wlsd@foltz.io>"

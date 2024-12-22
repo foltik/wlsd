@@ -4,16 +4,16 @@ use lettre::{
     Message, SmtpTransport, Transport,
 };
 
-use crate::MailConfig;
+use crate::EmailConfig;
 
 #[derive(Clone)]
-pub struct Mail {
+pub struct Email {
     addr: String,
     from: Mailbox,
 }
 
-impl Mail {
-    pub async fn connect(config: MailConfig) -> Result<Self> {
+impl Email {
+    pub async fn connect(config: EmailConfig) -> Result<Self> {
         // we need this for smtps
         let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
         Ok(Self { addr: config.addr, from: config.from })
@@ -29,15 +29,3 @@ impl Mail {
         Ok(())
     }
 }
-
-// state
-//     .mail
-//     .send(
-//         Message::builder()
-//             .from("Radio WLSD <wlsd@foltz.io>".parse()?)
-//             .to("Jack Foltz <jack@foltz.io>".parse()?)
-//             .subject("Hello, world!")
-//             .header(ContentType::TEXT_PLAIN)
-//             .body("Be happy!".to_string())?,
-//     )
-//     .await;
