@@ -174,8 +174,10 @@ async fn create_event_form(
     State(state): State<Arc<AppState>>,
     Form(form): Form<EventCreateForm>,
 ) -> AppResult<impl IntoResponse> {
-    let _event_id =
-        state.db.create_event(&form.title, &form.artist, &form.description, &form.start_date).await?;
+    let _event_id = state
+        .db
+        .create_event(&form.title, &form.artist, &form.description, &form.start_date)
+        .await?;
     Ok("Event created.")
 }
 
