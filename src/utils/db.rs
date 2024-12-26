@@ -4,7 +4,6 @@ use anyhow::Result;
 use lettre::message::Mailbox;
 use rand::{rngs::OsRng, Rng as _};
 use sqlx::{migrate::MigrateDatabase, sqlite::SqliteQueryResult, Error, Sqlite, SqlitePool};
-use toml::value::Datetime;
 
 #[derive(Clone)]
 pub struct Db {

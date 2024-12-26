@@ -158,7 +158,7 @@ async fn register_form(
 }
 
 async fn event_create(State(state): State<Arc<AppState>>) -> AppResult<Response> {
-    let mut ctx = tera::Context::new();
+    let ctx = tera::Context::new();
     let html = state.templates.render("event-create.tera.html", &ctx).unwrap();
     Ok(Html(html).into_response())
 }
