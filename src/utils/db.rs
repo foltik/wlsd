@@ -178,6 +178,21 @@ impl Db {
         .await?;
         Ok(event)
     }
+    // Get all Events
+    pub async fn get_all_events(&self, date: String, past: bool) -> Result<Vec<Event>, Error> {
+        let events = if !past {
+            sqlx::query_as::<_, Event>("SELECT e.* FROM events e WHERE start_date >= ?")
+                .bind(date)
+                .fetch_all(&self.pool)
+                .await?
+        } else {
+            sqlx::query_as::<_, Event>("SELECT e.* FROM events e WHERE start_date < ?")
+                .bind(date)
+                .fetch_all(&self.pool)
+                .await?
+        };
+        Ok(events)
+    }
     // Create Event
     pub async fn create_event(
         &self,
