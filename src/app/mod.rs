@@ -43,6 +43,7 @@ pub async fn build(config: Config) -> Result<Router> {
         .route("/event/create", post(create_event_form))
         .route("/event/:event_id", get(event_update))
         .route("/event/:event_id/update", post(update_event_form))
+        .route("/event/:event_id/delete", post(deleting_event))
         .nest_service("/assets", ServeDir::new("assets"))
         .layer(
             TraceLayer::new_for_http()
@@ -218,6 +219,14 @@ async fn update_event_form(
         )
         .await?;
     Ok("Event updated.")
+}
+
+async fn deleting_event(
+    State(state): State<Arc<AppState>>,
+    Path(event_id): Path<String>,
+) -> AppResult<impl IntoResponse> {
+    state.db.delete_event(event_id.parse().unwrap()).await?;
+    Ok("Event deleted.")
 }
 
 struct AppError(anyhow::Error);

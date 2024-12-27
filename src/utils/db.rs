@@ -219,11 +219,10 @@ impl Db {
         .await
     }
     // Remove Event
-    // TODO : Is this necessary right now?
-    // pub async fn delete_event(&self, id: i64) -> Result<SqliteQueryResult, Error> {
-    //     sqlx::query("DELETE FROM events WHERE id = ?")
-    //         .bind(id)
-    //         .execute(&self.pool)
-    //         .await
-    // }
+    pub async fn delete_event(&self, id: i64) -> Result<SqliteQueryResult, Error> {
+        sqlx::query("DELETE FROM events WHERE id = ?")
+            .bind(id)
+            .execute(&self.pool)
+            .await
+    }
 }
