@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use anyhow::Result;
+use chrono::NaiveDateTime;
 use lettre::message::Mailbox;
 use rand::{rngs::OsRng, Rng as _};
 use sqlx::{migrate::MigrateDatabase, sqlite::SqliteQueryResult, Error, Sqlite, SqlitePool};
@@ -10,7 +11,7 @@ pub struct Db {
     pool: SqlitePool,
 }
 
-#[derive(sqlx::FromRow, serde::Serialize)]
+#[derive(Debug, sqlx::FromRow, serde::Serialize)]
 pub struct User {
     pub id: i64,
     pub first_name: String,
@@ -19,15 +20,15 @@ pub struct User {
     pub created_at: String,
 }
 
-#[derive(sqlx::FromRow, serde::Serialize)]
+#[derive(Debug, sqlx::FromRow, serde::Serialize)]
 pub struct Event {
     pub id: i64,
     pub title: String,
     pub artist: String,
     pub description: String,
-    pub start_date: String,
-    pub created_at: String,
-    pub updated_at: String,
+    pub start_date: NaiveDateTime,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 impl Db {
