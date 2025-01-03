@@ -1,11 +1,16 @@
 use std::path::Path;
 
 use anyhow::Result;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Local};
 use lettre::message::Mailbox;
 use rand::{rngs::OsRng, Rng as _};
 use sqlx::{migrate::MigrateDatabase, sqlite::SqliteQueryResult, Error, Sqlite, SqlitePool};
 
+// +--------------------------------------------------------------------------------+
+// | TODO: Separate the individual types into a `models/` module to reduce clutter. |
+// +--------------------------------------------------------------------------------+
+
+/// Database client.
 #[derive(Clone)]
 pub struct Db {
     pool: SqlitePool,
@@ -26,9 +31,9 @@ pub struct Event {
     pub title: String,
     pub artist: String,
     pub description: String,
-    pub start_date: NaiveDateTime,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub start_date: DateTime<Local>,
+    pub created_at: DateTime<Local>,
+    pub updated_at: DateTime<Local>,
 }
 
 #[derive(Debug, sqlx::FromRow, serde::Serialize)]
@@ -38,8 +43,8 @@ pub struct Post {
     pub slug: String,
     pub author: String,
     pub body: String,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub created_at: DateTime<Local>,
+    pub updated_at: DateTime<Local>,
 }
 
 impl Db {
@@ -205,7 +210,7 @@ impl Db {
         Ok(event)
     }
     // Get all Events
-    pub async fn get_all_events(&self, date: String, past: bool) -> Result<Vec<Event>, Error> {
+    pub async fn get_all_events(&self, date: DateTime<Local>, past: bool) -> Result<Vec<Event>, Error> {
         let events = if !past {
             sqlx::query_as::<_, Event>("SELECT e.* FROM events e WHERE start_date >= ?")
                 .bind(date)
