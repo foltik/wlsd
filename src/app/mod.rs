@@ -32,7 +32,7 @@ fn format_datetime(value: &Value, args: &HashMap<String, Value>) -> tera::Result
     let input = value.as_str().ok_or_else(|| tera::Error::msg("Value must be a string"))?;
 
     // Parse the input string as a NaiveDateTime
-    let naive_datetime = NaiveDateTime::parse_from_str(input, "%Y-%m-%dT%H:%M")
+    let naive_datetime = NaiveDateTime::parse_from_str(input, "%Y-%m-%dT%H:%M:%S")
         .map_err(|_| tera::Error::msg("Failed to parse date"))?;
 
     // Convert NaiveDateTime to DateTime<Utc>
@@ -70,6 +70,9 @@ pub async fn build(config: Config) -> Result<Router> {
         .route("/event/:event_id", get(event_update))
         .route("/event/:event_id/update", post(update_event_form))
         .route("/event/:event_id/delete", post(deleting_event))
+        .route("/post", get(create_post))
+        .route("/post", post(create_post_form))
+        .route("/p/:post", get(get_post))
         .nest_service("/assets", ServeDir::new("assets"))
         .layer(
             TraceLayer::new_for_http()
@@ -276,6 +279,39 @@ async fn deleting_event(
 ) -> AppResult<impl IntoResponse> {
     state.db.delete_event(event_id.parse().unwrap()).await?;
     Ok("Event deleted.")
+}
+
+async fn get_post(State(state): State<Arc<AppState>>, Path(post): Path<String>) -> AppResult<Response> {
+    let Some(post) = state.db.lookup_post_by_slug(&post).await? else {
+        return Ok(StatusCode::NOT_FOUND.into_response());
+    };
+
+    let mut ctx = tera::Context::new();
+    ctx.insert("post", &post);
+
+    let html = state.templates.render("post.tera.html", &ctx).unwrap();
+    Ok(Html(html).into_response())
+}
+
+async fn create_post(State(state): State<Arc<AppState>>) -> AppResult<Response> {
+    let ctx = tera::Context::new();
+    let html = state.templates.render("post-create.tera.html", &ctx).unwrap();
+    Ok(Html(html).into_response())
+}
+
+#[derive(serde::Deserialize)]
+struct CreatePostForm {
+    title: String,
+    slug: String,
+    author: String,
+    body: String,
+}
+async fn create_post_form(
+    State(state): State<Arc<AppState>>,
+    Form(form): Form<CreatePostForm>,
+) -> AppResult<impl IntoResponse> {
+    let _event_id = state.db.create_post(&form.title, &form.slug, &form.author, &form.body).await?;
+    Ok(Redirect::to(&format!("{}/p/{}", state.config.app.url, form.slug)))
 }
 
 struct AppError(anyhow::Error);

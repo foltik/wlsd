@@ -31,6 +31,17 @@ pub struct Event {
     pub updated_at: NaiveDateTime,
 }
 
+#[derive(Debug, sqlx::FromRow, serde::Serialize)]
+pub struct Post {
+    pub id: i64,
+    pub title: String,
+    pub slug: String,
+    pub author: String,
+    pub body: String,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
 impl Db {
     pub async fn connect(file: &Path) -> Result<Self> {
         let url = format!("sqlite://{}", file.display());
@@ -87,6 +98,20 @@ impl Db {
                 artist TEXT NOT NULL, \
                 description TEXT NOT NULL, \
                 start_date TIMESTAMP NOT NULL, \
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP \
+            )",
+        )
+        .execute(&self.pool)
+        .await?;
+
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS posts ( \
+                id INTEGER PRIMARY KEY NOT NULL, \
+                title TEXT NOT NULL, \
+                slug TEXT NOT NULL, \
+                author TEXT NOT NULL, \
+                body TEXT NOT NULL, \
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP \
             )",
@@ -240,5 +265,23 @@ impl Db {
             .bind(id)
             .execute(&self.pool)
             .await
+    }
+
+    pub async fn create_post(&self, title: &str, slug: &str, author: &str, body: &str) -> Result<i64> {
+        let row = sqlx::query("INSERT INTO posts (title, slug, author, body) VALUES (?, ?, ?, ?)")
+            .bind(title)
+            .bind(slug)
+            .bind(author)
+            .bind(body)
+            .execute(&self.pool)
+            .await?;
+        Ok(row.last_insert_rowid())
+    }
+    pub async fn lookup_post_by_slug(&self, slug: &str) -> Result<Option<Post>> {
+        let row = sqlx::query_as::<_, Post>("SELECT * FROM posts WHERE slug = ?")
+            .bind(slug)
+            .fetch_optional(&self.pool)
+            .await?;
+        Ok(row)
     }
 }
